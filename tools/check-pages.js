@@ -51,6 +51,9 @@ const CASES = [
       if (links < 6) throw new Error("正文里的链接偏少：" + links);
       const qr = await ev("(document.querySelector('.donate-qr')||{}).getAttribute ? document.querySelector('.donate-qr').getAttribute('src') : ''");
       if (!/pay\.png/.test(qr || "")) throw new Error("赞赏码图没挂上");
+      // 图是懒加载的，先滚到它那里再判断有没有真的解码出来
+      await ev("document.querySelector('.donate-qr').scrollIntoView({block:'center'})");
+      await sleep(700);
       const loaded = await ev("(function(){var i=document.querySelector('.donate-qr');return !!(i && i.complete && i.naturalWidth>0);})()");
       if (!loaded) throw new Error("赞赏码图没加载出来");
     }
