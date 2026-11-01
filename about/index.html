@@ -4,9 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F7F1E7">
-<meta name="robots" content="noindex">
 <title>关于 · 小游戏合集</title>
+<meta name="description" content="这个小游戏合集是什么，怎么做的。">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%232B2533'/%3E%3Cpath d='M16 6l3 7 7 3-7 3-3 7-3-7-7-3 7-3z' fill='%23C9A96A'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="../assets/icon-180.png">
 <link rel="stylesheet" href="../assets/css/site.css">
 </head>
 <body>
@@ -19,10 +20,42 @@
     <span class="game-tag">ABOUT</span>
   </header>
 
-  <main class="closed">
-    <div class="closed-title">这部分暂时关闭</div>
-    <p class="closed-text">关于页先撤下来一阵子，处理好再放回来。游戏都还能玩。</p>
-    <a class="btn ghost" href="../index.html">回首页</a>
+  <main class="game-main" style="justify-content:flex-start; align-items:stretch;">
+
+    <div class="prose">
+
+      <p>这是一个小游戏合集，7 个网页小游戏加一个关于页，全部是静态文件。打开就能玩，不用注册、不用登录、不用下载。</p>
+
+      <h2>有什么</h2>
+      <ul>
+        <li><a href="../tetris/index.html">俄罗斯方块</a>：10×20 的格子，把方块堆整齐消行，越往后越快</li>
+        <li><a href="../wheel/index.html">恋爱转盘</a>：想不明白的事，交给转盘决定</li>
+        <li><a href="../tarot/index.html">恋爱塔罗</a>：24 道题，抽一张属于你的牌，能分享结果</li>
+        <li><a href="../2048/index.html">2048</a>：合并相同数字，凑到 2048</li>
+        <li><a href="../memory/index.html">记忆翻牌</a>：翻两张，把图案配成一对</li>
+        <li><a href="../snake/index.html">贪吃蛇</a>：越吃越长，别撞墙、别咬到自己</li>
+        <li><a href="../minesweeper/index.html">扫雷</a>：9×9 里藏了 10 颗雷，第一次点必定安全</li>
+      </ul>
+
+      <h2>怎么做的</h2>
+      <p>没有框架、没有构建步骤、没有第三方库。就是 HTML、CSS、JavaScript 三种文件，互相之间用相对路径引用。画图用 Canvas，界面用普通 DOM。</p>
+      <p>没有后端，所以也没有服务器排行榜。分数和最高纪录存在你自己浏览器的 localStorage 里，换设备、清缓存就没了。</p>
+      <p>没有统计脚本，也没有任何外部请求。页面打开以后完全在本地跑，断网也能玩。</p>
+
+      <h2>关于塔罗测评</h2>
+      <p>那个测评是纯娱乐向的，8 张牌面对应 8 种相处风格，题目和结果文案都是编的，不构成任何建议。分享链接会带上结果，朋友点开能直接看到。</p>
+
+      <h2>源码</h2>
+      <p>仓库：<a href="https://github.com/ZhanJHE/joke-love-tarot" target="_blank" rel="noopener">ZhanJHE/joke-love-tarot</a>。托管在 GitHub Pages 上。</p>
+
+      <div class="donate">
+        <div class="donate-label">如果这些小游戏让你笑了一下</div>
+        <img class="donate-qr" src="../assets/img/pay.png" alt="微信赞赏码" width="160" height="157" loading="lazy" decoding="async">
+        <div class="donate-note">请我喝杯咖啡 · 鸣谢位给你留着</div>
+      </div>
+
+    </div>
+
   </main>
 
 </div>

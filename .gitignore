@@ -18,6 +18,5 @@ build/
 .tmp/
 *.local
 
-# 个人收款码，暂不进仓库
-assets/img/pay.png
-tarot/assets/img/pay.png
+# 赞赏码原图（发布用的是 assets/img/pay.png 这份转换过的）
+赞赏码.png

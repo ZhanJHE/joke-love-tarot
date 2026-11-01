@@ -33,13 +33,9 @@ const CASES = [
       const n = await ev("document.querySelectorAll('.card').length");
       if (n !== 8) throw new Error("卡片数 " + n + "，应为 8");
       const links = await ev("document.querySelectorAll('a.card').length");
-      if (links !== 7) throw new Error("可点卡片数 " + links + "，应为 7");
-      const soon = await ev("document.querySelectorAll('.card--soon').length");
-      if (soon !== 1) throw new Error("占位卡片数 " + soon + "，应为 1");
-      const last = await ev("document.querySelectorAll('.card')[7].className");
-      if (!/card--soon/.test(last)) throw new Error("右下角不是占位卡：" + last);
-      const aboutLink = await ev("!!document.querySelector('a[href*=\"about\"]')");
-      if (aboutLink) throw new Error("关于入口还在，应该先屏蔽");
+      if (links !== 8) throw new Error("可点卡片数 " + links + "，应为 8");
+      const last = await ev("document.querySelectorAll('.card')[7].getAttribute('href')");
+      if (!/about/.test(last)) throw new Error("右下角不是关于：" + last);
       const names = await ev("Array.from(document.querySelectorAll('.card-name')).map(e=>e.textContent).join(' / ')");
       console.log("   卡片：" + names);
     }
@@ -47,12 +43,16 @@ const CASES = [
   {
     name: "02-about",
     path: "about/",
-    label: "关于（已停用）",
+    label: "关于",
     async run(ev) {
-      const closed = await ev("!!document.querySelector('.closed-title')");
-      if (!closed) throw new Error("没有停用提示");
       const prose = await ev("!!document.querySelector('.prose')");
-      if (prose) throw new Error("正文还在，没屏蔽干净");
+      if (!prose) throw new Error("缺少正文容器");
+      const links = await ev("document.querySelectorAll('.prose a').length");
+      if (links < 6) throw new Error("正文里的链接偏少：" + links);
+      const qr = await ev("(document.querySelector('.donate-qr')||{}).getAttribute ? document.querySelector('.donate-qr').getAttribute('src') : ''");
+      if (!/pay\.png/.test(qr || "")) throw new Error("赞赏码图没挂上");
+      const loaded = await ev("(function(){var i=document.querySelector('.donate-qr');return !!(i && i.complete && i.naturalWidth>0);})()");
+      if (!loaded) throw new Error("赞赏码图没加载出来");
     }
   },
   {
@@ -260,6 +260,15 @@ async function main() {
       console.log((ok ? "✓ " : "✗ ") + c.label + (ok ? "" : "  → " + msg));
       if (!ok) failures++;
     }
+
+    // 关于页滚到底，确认赞赏码位置
+    await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 900, deviceScaleFactor: 1, mobile: true });
+    await send("Page.navigate", { url: url("about/") });
+    await sleep(1200);
+    await ev("window.scrollTo(0, document.body.scrollHeight)");
+    await sleep(400);
+    await shot("02b-about-donate");
+    console.log("✓ 关于页底部截图");
 
     // 首页另截一张桌面尺寸
     await send("Emulation.setDeviceMetricsOverride", { width: 1200, height: 900, deviceScaleFactor: 1, mobile: false });

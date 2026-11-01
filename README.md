@@ -58,8 +58,11 @@ git push
 - 某个游戏的参数（速度、雷数、转盘选项、牌面图案）：见 [开发文档/小游戏说明.md](开发文档/小游戏说明.md)
 - 塔罗的题目和文案：`tarot/assets/js/data.js`，改完跑 `node tools/check-data.js`
 - 主屏幕图标：`node tools/icon.js` 重新生成 `assets/icon-180.png`
+- 赞赏码：替换 `assets/img/pay.png`，文件名不变就不用改代码
 
 站点结构、样式约定、验证流程见 [开发文档/站点说明.md](开发文档/站点说明.md)。
+
+作业材料（项目说明、Vibe Coding 记录、提交清单）在 [开发文档/作业提交](开发文档/作业提交)。
 
 ## 说明
 
