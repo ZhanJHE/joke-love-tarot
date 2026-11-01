@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F7F1E7">
+<title>扫雷 · 小游戏合集</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%232B2533'/%3E%3Cpath d='M16 6l3 7 7 3-7 3-3 7-3-7-7-3 7-3z' fill='%23C9A96A'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/css/site.css">
+<style>
+  :root { --accent: #5F8FA8; }
+
+  .ms-wrap { width: 320px; max-width: 82vw; display: block; }
+
+  .ms-board {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 2px;
+    background: var(--paper-2);
+    border-radius: 2px;
+    touch-action: manipulation;
+  }
+
+  .ms-cell {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    appearance: none;
+    border: 1px solid #D6C7AE;
+    border-radius: 1px;
+    background: #EADFCC;
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    user-select: none;
+  }
+  .ms-cell:active { background: var(--paper-2); }
+  .ms-cell.open {
+    background: #FBF7EF;
+    border-color: #E4D9C7;
+    cursor: default;
+  }
+  .ms-cell.flag { color: var(--gold); font-size: 13px; }
+  .ms-cell.boom { background: #B4626B; color: #FFFDF8; }
+
+  .n1 { color: #5F8FA8; }
+  .n2 { color: #5D7F6A; }
+  .n3 { color: #B4626B; }
+  .n4 { color: #6C6795; }
+  .n5 { color: #8C4A5E; }
+  .n6 { color: #3E6B84; }
+  .n7 { color: #2B2533; }
+  .n8 { color: #6E6577; }
+
+  #modeBtn { min-width: 96px; }
+</style>
+</head>
+<body>
+
+<div class="page page--game">
+  <header class="game-top">
+    <a class="back" href="../index.html">← 返回</a>
+    <span class="game-title">扫雷</span>
+    <span class="game-tag">MINES</span>
+  </header>
+
+  <div class="hud">
+    <span>剩余雷<b id="mines">10</b></span>
+    <span>用时<b id="time">0</b></span>
+    <button class="btn btn-sm ghost" id="modeBtn" type="button">插旗模式：关</button>
+  </div>
+
+  <main class="game-main">
+    <div class="stage ms-wrap">
+      <div class="ms-board" id="board"></div>
+      <div class="overlay" id="overlay">
+        <div class="overlay-card">
+          <div class="overlay-title" id="ovTitle">踩到雷了</div>
+          <div class="overlay-text" id="ovText"></div>
+          <button class="btn" id="ovBtn" type="button">再来一局</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <p class="game-tip">点格子挖开 · 右键或长按插旗 · 数字是周围雷数 · 第一次点必定安全</p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var N = 9, MINE_COUNT = 10;
+  var grid = [];
+  var started = false;
+  var ended = false;
+  var flagMode = false;
+  var revealedCount = 0;
+  var flags = 0;
+  var timerId = null;
+  var startAt = 0;
+
+  var elBoard = document.getElementById("board");
+  var elMines = document.getElementById("mines");
+  var elTime = document.getElementById("time");
+  var elMode = document.getElementById("modeBtn");
+  var overlay = document.getElementById("overlay");
+  var ovTitle = document.getElementById("ovTitle");
+  var ovText = document.getElementById("ovText");
+  var ovBtn = document.getElementById("ovBtn");
+
+  function makeGrid() {
+    grid = [];
+    for (var r = 0; r < N; r++) {
+      var row = [];
+      for (var c = 0; c < N; c++) {
+        row.push({ mine: false, open: false, flag: false, n: 0 });
+      }
+      grid.push(row);
+    }
+  }
+
+  function neighbors(r, c) {
+    var out = [];
+    for (var dr = -1; dr <= 1; dr++) {
+      for (var dc = -1; dc <= 1; dc++) {
+        if (!dr && !dc) continue;
+        var nr = r + dr, nc = c + dc;
+        if (nr >= 0 && nr < N && nc >= 0 && nc < N) out.push([nr, nc]);
+      }
+    }
+    return out;
+  }
+
+  function placeMines(safeR, safeC) {
+    var safe = { };
+    safe[safeR + "," + safeC] = true;
+    neighbors(safeR, safeC).forEach(function (p) { safe[p[0] + "," + p[1]] = true; });
+
+    var spots = [];
+    for (var r = 0; r < N; r++)
+      for (var c = 0; c < N; c++)
+        if (!safe[r + "," + c]) spots.push([r, c]);
+
+    for (var i = spots.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = spots[i]; spots[i] = spots[j]; spots[j] = t;
+    }
+
+    spots.slice(0, MINE_COUNT).forEach(function (p) {
+      grid[p[0]][p[1]].mine = true;
+    });
+
+    for (var rr = 0; rr < N; rr++) {
+      for (var cc = 0; cc < N; cc++) {
+        grid[rr][cc].n = neighbors(rr, cc).filter(function (p) {
+          return grid[p[0]][p[1]].mine;
+        }).length;
+      }
+    }
+  }
+
+  function cellEl(r, c) {
+    return elBoard.children[r * N + c];
+  }
+
+  function paint(r, c) {
+    var cell = grid[r][c];
+    var el = cellEl(r, c);
+    el.className = "ms-cell";
+    el.textContent = "";
+
+    if (cell.open) {
+      el.classList.add("open");
+      if (cell.mine) {
+        el.classList.add("boom");
+        el.textContent = "✸";
+      } else if (cell.n) {
+        el.textContent = cell.n;
+        el.classList.add("n" + cell.n);
+      }
+    } else if (cell.flag) {
+      el.classList.add("flag");
+      el.textContent = "⚑";
+    }
+  }
+
+  function repaintAll() {
+    for (var r = 0; r < N; r++)
+      for (var c = 0; c < N; c++) paint(r, c);
+  }
+
+  function startTimer() {
+    if (timerId) return;
+    startAt = Date.now();
+    timerId = setInterval(function () {
+      elTime.textContent = Math.floor((Date.now() - startAt) / 1000);
+    }, 500);
+  }
+
+  function stopTimer() {
+    if (timerId) { clearInterval(timerId); timerId = null; }
+  }
+
+  function open(r, c) {
+    var stack = [[r, c]];
+    while (stack.length) {
+      var p = stack.pop();
+      var rr = p[0], cc = p[1];
+      var cell = grid[rr][cc];
+      if (cell.open || cell.flag) continue;
+      cell.open = true;
+      revealedCount++;
+      if (!cell.mine && cell.n === 0) {
+        neighbors(rr, cc).forEach(function (q) {
+          if (!grid[q[0]][q[1]].open) stack.push(q);
+        });
+      }
+    }
+  }
+
+  function hit(r, c) {
+    if (ended) return;
+    var cell = grid[r][c];
+
+    if (flagMode || cell.flag) {
+      if (cell.open) return;
+      cell.flag = !cell.flag;
+      flags += cell.flag ? 1 : -1;
+      elMines.textContent = MINE_COUNT - flags;
+      paint(r, c);
+      return;
+    }
+
+    if (cell.open) return;
+
+    if (!started) {
+      started = true;
+      placeMines(r, c);
+      startTimer();
+    }
+
+    if (cell.mine) {
+      cell.open = true;
+      repaintAll();
+      lose(r, c);
+      return;
+    }
+
+    open(r, c);
+    repaintAll();
+    checkWin();
+  }
+
+  function checkWin() {
+    if (revealedCount === N * N - MINE_COUNT) {
+      ended = true;
+      stopTimer();
+      ovTitle.textContent = "清完了";
+      ovText.textContent = "用时 " + elTime.textContent + " 秒";
+      overlay.classList.add("show");
+    }
+  }
+
+  function lose(r, c) {
+    ended = true;
+    stopTimer();
+    for (var rr = 0; rr < N; rr++)
+      for (var cc = 0; cc < N; cc++)
+        if (grid[rr][cc].mine) { grid[rr][cc].open = true; }
+    repaintAll();
+    cellEl(r, c).classList.add("boom");
+    ovTitle.textContent = "踩到雷了";
+    ovText.textContent = "还剩 " + (N * N - MINE_COUNT - revealedCount) + " 个格子没挖";
+    overlay.classList.add("show");
+  }
+
+  function reset() {
+    makeGrid();
+    started = false;
+    ended = false;
+    revealedCount = 0;
+    flags = 0;
+    stopTimer();
+    elTime.textContent = "0";
+    elMines.textContent = MINE_COUNT;
+    overlay.classList.remove("show");
+
+    elBoard.innerHTML = "";
+    for (var r = 0; r < N; r++) {
+      for (var c = 0; c < N; c++) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "ms-cell";
+        b.dataset.r = String(r);
+        b.dataset.c = String(c);
+        elBoard.appendChild(b);
+      }
+    }
+    repaintAll();
+  }
+
+  elBoard.addEventListener("click", function (e) {
+    var b = e.target.closest(".ms-cell");
+    if (!b) return;
+    hit(parseInt(b.dataset.r, 10), parseInt(b.dataset.c, 10));
+  });
+
+  elBoard.addEventListener("contextmenu", function (e) {
+    var b = e.target.closest(".ms-cell");
+    if (!b) return;
+    e.preventDefault();
+    var r = parseInt(b.dataset.r, 10), c = parseInt(b.dataset.c, 10);
+    if (ended) return;
+    var cell = grid[r][c];
+    if (cell.open) return;
+    cell.flag = !cell.flag;
+    flags += cell.flag ? 1 : -1;
+    elMines.textContent = MINE_COUNT - flags;
+    paint(r, c);
+  });
+
+  // 手机上长按插旗
+  var pressTimer = null;
+  var longPressed = false;
+
+  elBoard.addEventListener("touchstart", function (e) {
+    var b = e.target.closest(".ms-cell");
+    if (!b) return;
+    longPressed = false;
+    pressTimer = setTimeout(function () {
+      longPressed = true;
+      var r = parseInt(b.dataset.r, 10), c = parseInt(b.dataset.c, 10);
+      if (ended) return;
+      var cell = grid[r][c];
+      if (cell.open) return;
+      cell.flag = !cell.flag;
+      flags += cell.flag ? 1 : -1;
+      elMines.textContent = MINE_COUNT - flags;
+      paint(r, c);
+    }, 380);
+  }, { passive: true });
+
+  elBoard.addEventListener("touchend", function () {
+    if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+  }, { passive: true });
+
+  elBoard.addEventListener("touchmove", function () {
+    if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+  }, { passive: true });
+
+  elBoard.addEventListener("click", function (e) {
+    if (longPressed) {
+      e.stopPropagation();
+      e.preventDefault();
+      longPressed = false;
+    }
+  }, true);
+
+  elMode.addEventListener("click", function () {
+    flagMode = !flagMode;
+    elMode.textContent = "插旗模式：" + (flagMode ? "开" : "关");
+  });
+
+  document.getElementById("ovBtn").addEventListener("click", reset);
+  reset();
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F7F1E7">
+<title>测测你的恋爱塔罗牌</title>
+<meta name="description" content="24 道题，抽一张属于你的恋爱塔罗牌。纯娱乐。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="测测你的恋爱塔罗牌">
+<meta property="og:description" content="抽一张牌，看看你在恋爱里是什么样子。">
+<!-- 部署后把下面两行换成绝对地址，例如 https://你的用户名.github.io/joke-love-tarot/tarot/assets/og.png -->
+<meta property="og:image" content="https://zhanjhe.github.io/joke-love-tarot/tarot/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%232B2533'/%3E%3Cpath d='M16 6l3 7 7 3-7 3-3 7-3-7-7-3 7-3z' fill='%23C9A96A'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div class="phone">
+  <div id="app">
+
+    <!-- 封面 -->
+    <section class="screen active" id="cover">
+      <a class="cover-back" href="../index.html">← 合集</a>
+      <div class="kicker"></div>
+      <h1 class="wordmark"></h1>
+      <div class="cover-rule"><span>✷</span></div>
+      <p class="cover-sub"></p>
+      <div class="stage" id="stage"></div>
+      <button class="btn" id="startBtn" type="button">开始抽牌</button>
+      <div class="hint"></div>
+      <div class="cover-foot">仅供娱乐，请勿当真</div>
+    </section>
+
+    <!-- 答题 -->
+    <section class="screen" id="quiz">
+      <div class="topbar">
+        <button class="prev-btn" id="prevBtn" type="button" aria-label="上一题">←</button>
+        <span class="progress-text" id="progText">1 / 24</span>
+        <span class="progress-text brand">MOONLIT</span>
+      </div>
+      <div class="bar"><i id="barFill"></i></div>
+      <div class="q-wrap">
+        <div class="q-inner">
+          <div class="q-card">
+            <div class="q-art" id="qArt"></div>
+            <div>
+              <div class="q-label" id="qLabel"></div>
+              <div class="q-title" id="qTitle"></div>
+            </div>
+          </div>
+          <div class="opts" id="opts"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 结果 -->
+    <section class="screen" id="result">
+      <div class="shared-badge" id="sharedBadge"></div>
+      <div class="res-wrap">
+        <div class="res-hero" id="banner">
+          <div class="res-art" id="resArt"></div>
+          <div class="res-label" id="resLabel">你的恋爱牌面</div>
+          <div class="res-name" id="resName"></div>
+          <div class="res-title" id="resTitle"></div>
+        </div>
+
+        <div class="res-desc" id="resDesc"></div>
+        <div class="res-tags" id="resTags"></div>
+        <div class="sub-cats" id="subCats"></div>
+
+        <div class="chart-block">
+          <div class="sec-label">你的恋爱八维</div>
+          <div class="chart" id="chart"></div>
+        </div>
+
+        <div class="pair-box">
+          <div class="pair-row" id="pairLine"></div>
+          <div class="pair-row" id="buddyLine"></div>
+        </div>
+
+        <div class="actions">
+          <button class="btn" id="againBtn" type="button">再抽一次</button>
+          <button class="btn ghost" id="shareBtn" type="button">分享给朋友</button>
+          <button class="link-btn" id="galleryBtn" type="button">牌面图鉴</button>
+          <div class="share-note" id="shareNote"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 图鉴 -->
+    <section class="screen" id="gallery">
+      <div class="g-top">
+        <button class="prev-btn" id="galleryBack" type="button" aria-label="返回">←</button>
+        <span class="progress-text">牌面图鉴</span>
+        <span class="progress-text brand">8 张</span>
+      </div>
+      <div class="g-list" id="galleryList"></div>
+    </section>
+
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/art.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F7F1E7">
+<title>恋爱转盘 · 小游戏合集</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%232B2533'/%3E%3Cpath d='M16 6l3 7 7 3-7 3-3 7-3-7-7-3 7-3z' fill='%23C9A96A'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/css/site.css">
+<style>
+  :root { --accent: #B98A5E; }
+
+  .wheel-stage {
+    position: relative;
+    width: 300px;
+    max-width: 78vw;
+    aspect-ratio: 1;
+    margin: 0 auto;
+    padding: 10px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    box-shadow: 0 12px 26px -22px rgba(43, 37, 51, .8), inset 0 0 0 1px rgba(255, 255, 255, .6);
+  }
+  #wheel {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .pointer {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 9px solid transparent;
+    border-right: 9px solid transparent;
+    border-top: 16px solid var(--ink);
+    filter: drop-shadow(0 2px 2px rgba(43, 37, 51, .25));
+    z-index: 2;
+  }
+  .result {
+    min-height: 44px;
+    text-align: center;
+    margin-top: 4px;
+  }
+  .result-label {
+    font-size: 10.5px;
+    letter-spacing: .24em;
+    color: var(--ink-3);
+  }
+  .result-text {
+    font-family: var(--serif);
+    font-size: 20px;
+    letter-spacing: .06em;
+    margin-top: 4px;
+    color: var(--ink);
+  }
+</style>
+</head>
+<body>
+
+<div class="page page--game">
+  <header class="game-top">
+    <a class="back" href="../index.html">← 返回</a>
+    <span class="game-title">恋爱转盘</span>
+    <span class="game-tag">SPIN</span>
+  </header>
+
+  <main class="game-main">
+    <div class="wheel-stage">
+      <div class="pointer"></div>
+      <canvas id="wheel" width="300" height="300" aria-label="恋爱转盘"></canvas>
+    </div>
+
+    <div class="result">
+      <div class="result-label" id="resLabel">想不明白的事，交给转盘</div>
+      <div class="result-text" id="resText"></div>
+    </div>
+
+    <button class="btn" id="spin" type="button">转一下</button>
+  </main>
+
+  <p class="game-tip">结果就是图个开心，别真的照做</p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* 想换选项就改这里，8 个最好（也可以改 4 / 6 / 8） */
+  var OPTIONS = [
+    "主动发消息",
+    "等他开口",
+    "删掉他",
+    "刷朋友圈",
+    "找他聊三句",
+    "出去玩",
+    "明天再说",
+    "直接问清楚"
+  ];
+
+  var COLORS = [
+    "#6C6795", "#B98A5E", "#5F8FA8", "#5D7F6A",
+    "#B4626B", "#7E7BA6", "#C87B96", "#D99A3F"
+  ];
+
+  var canvas = document.getElementById("wheel");
+  var ctx = canvas.getContext("2d");
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var SIZE = 300;
+  canvas.width = SIZE * dpr;
+  canvas.height = SIZE * dpr;
+  ctx.scale(dpr, dpr);
+
+  var step = Math.PI * 2 / OPTIONS.length;
+  var rot = -Math.PI / 2;
+  var spinning = false;
+  var startRot = 0, targetRot = 0, startTime = 0, duration = 3400;
+
+  var elSpin = document.getElementById("spin");
+  var elRes = document.getElementById("resText");
+  var elLabel = document.getElementById("resLabel");
+
+  function draw(r) {
+    var cx = SIZE / 2, cy = SIZE / 2, R = SIZE / 2 - 6;
+
+    ctx.clearRect(0, 0, SIZE, SIZE);
+
+    for (var i = 0; i < OPTIONS.length; i++) {
+      var a0 = r + i * step;
+      var a1 = a0 + step;
+
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, R, a0, a1);
+      ctx.closePath();
+      ctx.fillStyle = COLORS[i % COLORS.length];
+      ctx.fill();
+      ctx.strokeStyle = "rgba(247,241,231,.55)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // 文字统一水平摆放，放在扇区中线上，不做旋转——中文旋转后容易读反
+      var mid = a0 + step / 2;
+      var lx = cx + Math.cos(mid) * R * 0.68;
+      var ly = cy + Math.sin(mid) * R * 0.68;
+      ctx.save();
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = "600 12.5px -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif";
+      ctx.fillStyle = "rgba(43,37,51,.28)";
+      ctx.fillText(OPTIONS[i], lx + .6, ly + .8);
+      ctx.fillStyle = "#FBF7EF";
+      ctx.fillText(OPTIONS[i], lx, ly);
+      ctx.restore();
+    }
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(43,37,51,.28)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, 22, 0, Math.PI * 2);
+    ctx.fillStyle = "#FBF7EF";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(43,37,51,.24)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.fillStyle = "#B08D57";
+    ctx.font = "15px serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("✷", cx, cy + 1);
+  }
+
+  function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+  }
+
+  function spin() {
+    if (spinning) return;
+    spinning = true;
+    elSpin.disabled = true;
+    elRes.textContent = "";
+    elLabel.textContent = "转圈中…";
+
+    var idx = Math.floor(Math.random() * OPTIONS.length);
+    var base = -Math.PI / 2 - (idx + 0.5) * step;
+    var twoPi = Math.PI * 2;
+    var target = base + twoPi * Math.ceil((rot + twoPi * 4 - base) / twoPi);
+
+    startRot = rot;
+    targetRot = target;
+    startTime = performance.now();
+    duration = 3200 + Math.random() * 800;
+
+    requestAnimationFrame(tick);
+
+    window.__spinResult = OPTIONS[idx];
+  }
+
+  function tick(now) {
+    var t = Math.min(1, (now - startTime) / duration);
+    rot = startRot + (targetRot - startRot) * easeOutCubic(t);
+    draw(rot);
+
+    if (t < 1) {
+      requestAnimationFrame(tick);
+    } else {
+      spinning = false;
+      elSpin.disabled = false;
+      elLabel.textContent = "转盘说";
+      elRes.textContent = window.__spinResult;
+    }
+  }
+
+  elSpin.addEventListener("click", spin);
+  canvas.addEventListener("click", spin);
+
+  draw(rot);
+})();
+</script>
+
+</body>
+</html>
